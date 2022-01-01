@@ -73,7 +73,6 @@ public class ReportContoller {
     @PostMapping("daily")
     public void autoRecieveData(@RequestBody String data) throws ParseException{
     	JSONObject j = (JSONObject) JSONValue.parse(data);
-        System.out.println("Date: " );
         String date = (String) j.get("date");
         long positives = (long) j.get("positives");
         long south = (long) j.get("south");
