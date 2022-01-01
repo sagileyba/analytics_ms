@@ -124,8 +124,8 @@ public class ReportService {
 
 
         //Test
-        System.out.println("yesterday: " + oneWeekAgo);
-        System.out.println("twoWeeksAgo: " + twoWeeksAgo);
+   //     System.out.println("yesterday: " + oneDayAgo);
+   //     System.out.println("twoWeeksAgo: " + twoWeeksAgo);
         
         
         Report currDateReport =  this.reportRepository.findByDate(date);
