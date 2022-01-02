@@ -50,7 +50,7 @@ public class ReportService {
 //
 //    }
     //Get prediction reports between dates (must be in the analytics DB to be shown)
-    public  List<Report> getPredictionBetweenDatesReport(String endDate ,String startDate) throws JsonProcessingException {   // range of prediction ... need to add another date
+    public  List<Report> getPredictionBetweenDatesReport(String endDate ,String startDate) {   // range of prediction ... need to add another date
     	
     //	String startDate  = LocalDate.parse(endDate).minusDays(14).toString();  // currently checking 15 days
     	List<Report> reports = reportRepository.getReportsBetweenDatesQuery(startDate,endDate);

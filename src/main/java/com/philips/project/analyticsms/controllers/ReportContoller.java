@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -39,6 +40,18 @@ public class ReportContoller {
         return reportService.getReports();
     }
 
+    @GetMapping("nextweekpred")
+    public List<Report> nextWeekPrediction() {
+    	LocalDate twoWeeksAgo = LocalDate.now().minusDays(13);
+    	LocalDate nextWeek = LocalDate.now().plusDays(7);
+
+    	List<Report> list = reportService.getPredictionBetweenDatesReport(nextWeek.toString() , twoWeeksAgo.toString() );
+        Collections.sort(list, Comparator.comparingLong(Report::getId));
+
+        return list;
+    }
+    
+    
     @GetMapping("date")               // get date in body, returns Report (not json)
     public Report getReportByDate(String date){
         return reportService.getReportByDate(date);
@@ -53,22 +66,13 @@ public class ReportContoller {
 	}
 
     
-    @GetMapping("predict/{startDate}/{endDate}")               // predicts how many positive in specific date
-    public List<Report> getPredictionReportsBetweenDates(@PathVariable String startDate ,@PathVariable String endDate) throws JsonProcessingException{
+    @GetMapping("predictbetweendates/{startDate}/{endDate}")               // predicts how many positive in specific date (only if exists)
+    public List<Report> getPredictionReportsBetweenDates(@PathVariable String startDate ,@PathVariable String endDate){
         List<Report> list = reportService.getPredictionBetweenDatesReport(endDate , startDate );
         Collections.sort(list, Comparator.comparingLong(Report::getId));
 
         return list;
     }
-
-    /*//calculateDailyReport doing this
-    @GetMapping("predict/{specificDate}")               // predicts how many positive in specific date
-    public String getPredictionReportsBetweenDates(@PathVariable String date ) throws JsonProcessingException{
-         return reportService.getPredictionBetweenDatesReport( date );
-    }*/
-    
-
-
 
     @PostMapping("daily")
     public void autoRecieveData(@RequestBody String data) throws ParseException{
