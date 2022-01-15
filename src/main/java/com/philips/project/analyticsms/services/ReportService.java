@@ -117,30 +117,23 @@ public class ReportService {
      */
     private  Report calculateHelper(String date) {    //  calculate prediction algorithm as assumed 
     	
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate oneWeekAgo = LocalDate.parse(date,formatter).minusDays(7);
-        LocalDate twoWeeksAgo = LocalDate.parse(date,formatter).minusDays(14);
-        LocalDate oneDayAgo = LocalDate.parse(date,formatter).minusDays(1);
-
-
-        //Test
-   //     System.out.println("yesterday: " + oneDayAgo);
-   //     System.out.println("twoWeeksAgo: " + twoWeeksAgo);
-        
-        
         Report currDateReport =  this.reportRepository.findByDate(date);
-        Report yesterdayDate =  this.reportRepository.findByDate(oneDayAgo.toString());
-        Report day7Report = this.reportRepository.findByDate(oneWeekAgo.toString());
-        Report day14Report = reportRepository.findByDate(twoWeeksAgo.toString());      
-        
-
         if(currDateReport  == null) {
         	currDateReport = new Report();
         	currDateReport.setDate(date);
         }
         else if (currDateReport != null && currDateReport.getAccumPositives()>0) {
         	return currDateReport;
-        }
+        }   
+   
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate oneWeekAgo = LocalDate.parse(date,formatter).minusDays(7);
+        LocalDate twoWeeksAgo = LocalDate.parse(date,formatter).minusDays(14);
+        LocalDate oneDayAgo = LocalDate.parse(date,formatter).minusDays(1);
+        
+        Report yesterdayDate =  this.reportRepository.findByDate(oneDayAgo.toString());
+        Report day7Report = this.reportRepository.findByDate(oneWeekAgo.toString());
+        Report day14Report = reportRepository.findByDate(twoWeeksAgo.toString());      
         
         
         int accumYesterday =   yesterdayDate   == null?    0:yesterdayDate.getAccumPositives();      
@@ -152,9 +145,27 @@ public class ReportService {
         int less80Percent = (int)(0.8*sevenAgo);
         int less20Percent = (int) (fourTeenAgo*0.2);
         
-       
-        
+        int toReduce =  less80Percent  + less20Percent;
+        if( toReduce > 0)
+        	subscribeCountries(currDateReport, toReduce );  
+    	
         int sum =(int) (todayPositive + accumYesterday - less80Percent  - less20Percent)    ;
+        sum = sum > 0 ? sum : 0;
+        currDateReport.setAccumPositives(sum);
+
+        reportRepository.save(currDateReport);
+        return currDateReport;
+    }
+   
+    
+    
+    private void subscribeCountries(Report currDateReport ,int toReduce ) {  // reduce area of patient when calculateHelper run
+    	int reducNorth=0 , reduceCenter=0, reduceSouth=0;
+      
+    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate oneDayAgo = LocalDate.parse(currDateReport.getDate(),formatter).minusDays(1);
+        Report yesterdayDate =  this.reportRepository.findByDate(oneDayAgo.toString());
+
         int accumNorthYesterday =   yesterdayDate   == null?    0:yesterdayDate.getNorthCount();      
         int accumSouthYesterday =   yesterdayDate   == null?    0:yesterdayDate.getSouthCount();      
         int accumCenterYesterday =   yesterdayDate   == null?    0:yesterdayDate.getCenterCount();      
@@ -163,18 +174,7 @@ public class ReportService {
         currDateReport.setNorthCount(  currDateReport.getNorthCount() + accumNorthYesterday);
     	currDateReport.setSouthCount( currDateReport.getSouthCount() + accumSouthYesterday);
       
-        int toReduce =  less80Percent  + less20Percent;
-        if( toReduce > 0)
-        	subscribe(currDateReport, toReduce );  
     	
-        
-        currDateReport.setAccumPositives(sum);
-
-        reportRepository.save(currDateReport);
-        return currDateReport;
-    }
-    private void subscribe(Report currDateReport ,int toReduce ) {  // reduce area of patient when calculateHelper run
-    	int reducNorth=0 , reduceCenter=0, reduceSouth=0;
     	
     	reduceSouth = toReduce/3;
     	reducNorth = toReduce/3;
@@ -192,55 +192,6 @@ public class ReportService {
 
     	
     }
-/*    private void subscribe(Report currDateReport ,int toReduce ,int randomArea) {
-
-     	int negativeNum;
-    	switch(randomArea) {
-    	case 0:
-        	if( currDateReport.getNorthCount()  < toReduce ) {
-        		currDateReport.setNorthCount(0);
-        		negativeNum = (currDateReport.getNorthCount() - toReduce)*-1;
-        		if(currDateReport.getCenterCount() > negativeNum) {
-        			subscribe(currDateReport, negativeNum , 2);
-        		}
-        		else {
-        			subscribe(currDateReport, negativeNum, 1);
-        		}
-        	} 	
-        	else
-        		currDateReport.setNorthCount(currDateReport.getNorthCount() - toReduce);
-    		break;
-    	case 1:    		
-    		if( currDateReport.getSouthCount()  < toReduce ) {
-        		currDateReport.setSouthCount(0);
-        		negativeNum = (currDateReport.getSouthCount() - toReduce)*-1;
-        		if(currDateReport.getNorthCount() > negativeNum) {
-        			subscribe(currDateReport, negativeNum , 0);
-        		}
-        		else {
-        			subscribe(currDateReport, negativeNum, 2);
-        		}
-        	} 	
-        	else
-        		currDateReport.setSouthCount(currDateReport.getSouthCount() - toReduce);
-    		break;
-    	case 2:    
-    		if( currDateReport.getCenterCount()  < toReduce ) {
-        		currDateReport.setCenterCount(0);
-        		negativeNum = (currDateReport.getCenterCount() - toReduce)*-1;
-        		if(currDateReport.getSouthCount() > negativeNum) {
-        			subscribe(currDateReport, negativeNum , 1);
-        		}
-        		else {
-        			subscribe(currDateReport, negativeNum, 0);
-        		}
-        	} 	
-        	else
-        		currDateReport.setCenterCount(currDateReport.getCenterCount() - toReduce);
-    		break;
-    	}
-    }
-*/
     
     private String createJson(Report report) throws JsonProcessingException {
     	 ObjectMapper mapper = new ObjectMapper();
@@ -249,7 +200,7 @@ public class ReportService {
     }
     
     private String createJson(List<Report> reports) throws JsonProcessingException {
-   	 ObjectMapper mapper = new ObjectMapper();
+   	    ObjectMapper mapper = new ObjectMapper();
  	    String json = mapper.writeValueAsString(reports); 
      	return json;
    }
