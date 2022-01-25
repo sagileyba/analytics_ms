@@ -7,20 +7,15 @@ import com.philips.project.analyticsms.services.ReportService;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("report")
@@ -85,7 +80,7 @@ public class ReportContoller {
         long central = (long) j.get("central");
 
         System.out.println(numberOfPCRs);
-       reportService.autoRecieveData((String)j.get("date"),(int)positives,(int)numberOfPCRs,(int)south,(int)north,(int)central);
+       reportService.autoRecieveData(date,(int)positives,(int)numberOfPCRs,(int)south,(int)north,(int)central);
     }
 
 

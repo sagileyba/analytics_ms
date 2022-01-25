@@ -4,17 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.philips.project.analyticsms.beans.Report;
 import com.philips.project.analyticsms.repository.ReportRepository;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 
 @Service
 public class ReportService {
@@ -46,9 +41,7 @@ public class ReportService {
         reportRepository.save(reportToUpdate);
     }
 
-//    public int calculateReport(Person[] reports){
-//
-//    }
+
     //Get prediction reports between dates (must be in the analytics DB to be shown)
     public  List<Report> getPredictionBetweenDatesReport(String endDate ,String startDate) {   // range of prediction ... need to add another date
     	
@@ -123,6 +116,7 @@ public class ReportService {
         	currDateReport.setDate(date);
         }
         else if (currDateReport != null && currDateReport.getAccumPositives()>0) {
+            System.out.println("currDateReport != null && currDateReport.getPositivePCR()>0");
         	return currDateReport;
         }   
    
@@ -141,15 +135,19 @@ public class ReportService {
         int todayPositive  =   currDateReport  == null?    0:currDateReport.getPositivePCR();
         int sevenAgo       =   day7Report      == null?	 0:day7Report.getPositivePCR();
         int fourTeenAgo    =   day14Report     == null?    0:day14Report.getPositivePCR();
+        System.out.println(date + "accumYesterday"+" " + accumYesterday);
+        System.out.println("0.8*sevenAgo"+" " + 0.8*sevenAgo + "  sevenAgo"+" " + sevenAgo);
 
         int less80Percent = (int)(0.8*sevenAgo);
         int less20Percent = (int) (fourTeenAgo*0.2);
-        
+        System.out.println("toReduce= "+less80Percent + " " + less20Percent );
         int toReduce =  less80Percent  + less20Percent;
         if( toReduce > 0)
         	subscribeCountries(currDateReport, toReduce );  
     	
-        int sum =(int) (todayPositive + accumYesterday - less80Percent  - less20Percent)    ;
+        int sum =(int) (todayPositive + accumYesterday - toReduce)    ;
+        System.out.println("sum = todayPositive + accumYesterday - less80Percent  - less20Percent");
+        System.out.println(sum +" = " + (todayPositive + accumYesterday));
         sum = sum > 0 ? sum : 0;
         currDateReport.setAccumPositives(sum);
 
